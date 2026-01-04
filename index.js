@@ -1,25 +1,56 @@
 const express = require("express");
 const app = express();
 
-let comando = "NADA";
+// Permite receber texto simples (IP do Arduino)
+app.use(express.text());
 
-// 📱 App (iOS / Android) envia comando
+let comando = "NADA";
+let ultimoIP = "DESCONHECIDO";
+
+/* ===============================
+   APP (Thunkable / Mobile)
+   envia comando
+================================ */
 app.get("/device/123/set", (req, res) => {
   const cmd = req.query.set;
+
   if (cmd) {
     comando = cmd.toUpperCase();
+    console.log("Comando recebido:", comando);
     return res.send("OK");
   }
+
   res.send("SEM COMANDO");
 });
 
-// 🔌 Arduino faz HTTP pull
+/* ===============================
+   ARDUINO faz HTTP pull
+================================ */
 app.get("/device/123/cmd", (req, res) => {
   res.send(comando);
   comando = "NADA";
 });
 
-const PORT = process.env.PORT || 3000;
+/* ===============================
+   ARDUINO envia o IP STA
+================================ */
+app.post("/device/123/ip", (req, res) => {
+  ultimoIP = req.body;
+  console.log("IP STA recebido:", ultimoIP);
+  res.send("OK");
+});
+
+/* ===============================
+   APP / DEBUG lê IP
+================================ */
+app.get("/device/123/ip", (req, res) => {
+  res.send(ultimoIP);
+});
+
+/* ===============================
+   START SERVER (Render)
+================================ */
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log("Servidor activo na porta " + PORT);
 });
